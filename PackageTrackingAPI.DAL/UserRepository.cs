@@ -1,7 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
+﻿using System.Collections.Generic;
 using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
 using PackageTrackingAPI.Models;
@@ -27,26 +24,37 @@ namespace PackageTrackingAPI.DAL
             return await _context.Users.FindAsync(id);
         }
 
-        public async Task AddUserAsync(User user)
+        public async Task<User> CreateUserAsync(User user)
         {
-            _context.Users.Add(user);
+            if (user == null)
+                throw new ArgumentNullException(nameof(user));
+
+            await _context.Users.AddAsync(user);
             await _context.SaveChangesAsync();
+            return user;
         }
 
-        public async Task UpdateUserAsync(User user)
+        public async Task<User> UpdateUserAsync(User user)
         {
+            if (user == null)
+                throw new ArgumentNullException(nameof(user));
+
             _context.Users.Update(user);
             await _context.SaveChangesAsync();
+            return user;
         }
 
-        public async Task DeleteUserAsync(int id)
+        public async Task<bool> DeleteUserAsync(int id)
         {
             var user = await _context.Users.FindAsync(id);
-            if (user != null)
+            if (user == null)
             {
-                _context.Users.Remove(user);
-                await _context.SaveChangesAsync();
+                return false;
             }
+
+            _context.Users.Remove(user);
+            await _context.SaveChangesAsync();
+            return true;
         }
     }
 }
