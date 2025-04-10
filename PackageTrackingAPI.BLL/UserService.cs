@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using AutoMapper;
 using Microsoft.EntityFrameworkCore;
 using PackageTrackingAPI.DAL;
 using PackageTrackingAPI.DTOs;
@@ -12,72 +13,50 @@ namespace PackageTrackingAPI.BLL
 {
     public class UserService
     {
-        private readonly PackageTrackingContext _context;
+        private readonly UserRepository _userRepository;
+        private readonly IMapper _mapper;
 
-        public UserService(PackageTrackingContext context)
+        public UserService(UserRepository userRepository, IMapper mapper)
         {
-            _context = context;
-        }
-
-        public async Task<List<UserDto>> GetAllUsersAsync()
-        {
-            var users = await _context.Users.ToListAsync();
-            return users.Select(user => new UserDto
-            {
-                UserID = user.UserID,
-                Name = user.Name,
-                Email = user.Email
-            }).ToList();
-        }
-
-        public async Task<UserDto> GetUserByIdAsync(int id)
-        {
-            var user = await _context.Users.FindAsync(id);
-            if (user == null) return null;
-
-            return new UserDto
-            {
-                UserID = user.UserID,
-                Name = user.Name,
-                Email = user.Email
-            };
+            _userRepository = userRepository;
+            _mapper = mapper;
         }
 
         public async Task<UserDto> CreateUserAsync(UserDto userDto)
         {
-            var user = new User
-            {
-                Name = userDto.Name,
-                Email = userDto.Email
-            };
+            var user = _mapper.Map<User>(userDto);
+            var createdUser = await _userRepository.CreateUserAsync(user);
+            return _mapper.Map<UserDto>(createdUser);
+        }
 
-            _context.Users.Add(user);
-            await _context.SaveChangesAsync();
+        public async Task<List<UserDto>> GetAllUsersAsync()
+        {
+            var users = await _userRepository.GetAllUsersAsync();
+            return _mapper.Map<List<UserDto>>(users);
+        }
 
-            userDto.UserID = user.UserID;
-            return userDto;
+        public async Task<UserDto> GetUserByIdAsync(int id)
+        {
+            var user = await _userRepository.GetUserByIdAsync(id);
+            return user == null ? null : _mapper.Map<UserDto>(user);
         }
 
         public async Task<UserDto> UpdateUserAsync(int id, UserDto userDto)
         {
-            var user = await _context.Users.FindAsync(id);
-            if (user == null) return null;
+            var existingUser = await _userRepository.GetUserByIdAsync(id);
+            if (existingUser == null)
+            {
+                throw new KeyNotFoundException($"User with ID {id} not found.");
+            }
 
-            user.Name = userDto.Name;
-            user.Email = userDto.Email;
-
-            await _context.SaveChangesAsync();
-            return userDto;
+            _mapper.Map(userDto, existingUser);
+            var updatedUser = await _userRepository.UpdateUserAsync(existingUser);
+            return _mapper.Map<UserDto>(updatedUser);
         }
 
-        public async Task DeleteUserAsync(int id)
+        public async Task<bool> DeleteUserAsync(int id)
         {
-            var user = await _context.Users.FindAsync(id);
-            if (user != null)
-            {
-                _context.Users.Remove(user);
-                await _context.SaveChangesAsync();
-            }
+            return await _userRepository.DeleteUserAsync(id);
         }
     }
 }
