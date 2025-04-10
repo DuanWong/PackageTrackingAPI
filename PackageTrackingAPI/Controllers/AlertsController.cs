@@ -1,45 +1,94 @@
-﻿using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Mvc;
 using PackageTrackingAPI.BLL;
 using PackageTrackingAPI.DTOs;
+using System;
+using System.Collections.Generic;
+using System.Threading.Tasks;
 
-namespace Package_Tracking_API.Controllers
+namespace PackageTrackingAPI.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
-    public class AlertsController : ControllerBase
+    public class AlertController : ControllerBase
     {
         private readonly AlertService _alertService;
 
-        public AlertsController(AlertService alertService)
+        public AlertController(AlertService alertService)
         {
             _alertService = alertService;
         }
 
         [HttpGet]
-        public async Task<ActionResult<List<AlertDto>>> GetAlerts()
+        public async Task<IActionResult> GetAllAlerts()
         {
-            return await _alertService.GetAllAlertsAsync();
+            try
+            {
+                var alerts = await _alertService.GetAllAlertsAsync();
+                return Ok(alerts);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { status = 500, message = "An unexpected error occurred.", details = ex.Message });
+            }
         }
 
-        [HttpGet("user/{userId}")]
-        public async Task<ActionResult<List<AlertDto>>> GetAlertsByUser(int userId)
+        [HttpGet("{id}")]
+        public async Task<IActionResult> GetAlert(int id)
         {
-            return await _alertService.GetAlertsByUserIdAsync(userId);
+            try
+            {
+                var alert = await _alertService.GetAlertByIdAsync(id);
+                return Ok(alert);
+            }
+            catch (KeyNotFoundException ex)
+            {
+                return NotFound(new { status = 404, message = ex.Message });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { status = 500, message = "An unexpected error occurred.", details = ex.Message });
+            }
         }
 
         [HttpPost]
-        public async Task<ActionResult<AlertDto>> CreateAlert(AlertDto alertDto)
+        public async Task<IActionResult> CreateAlert([FromBody] AlertDto alertDto)
         {
-            var newAlert = await _alertService.CreateAlertAsync(alertDto);
-            return CreatedAtAction(nameof(GetAlertsByUser), new { userId = newAlert.UserID }, newAlert);
+            if (!ModelState.IsValid)
+            {
+                return BadRequest(new { status = 400, message = "Invalid input data.", errors = ModelState.Values });
+            }
+
+            try
+            {
+                var alert = await _alertService.CreateAlertAsync(alertDto);
+                return CreatedAtAction(nameof(GetAlert), new { id = alert.AlertID }, alert);
+            }
+            catch (ArgumentException ex)
+            {
+                return BadRequest(new { status = 400, message = ex.Message });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { status = 500, message = "An unexpected error occurred.", details = ex.Message });
+            }
         }
 
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeleteAlert(int id)
         {
-            await _alertService.DeleteAlertAsync(id);
-            return NoContent();
+            try
+            {
+                await _alertService.DeleteAlertAsync(id);
+                return NoContent();
+            }
+            catch (KeyNotFoundException ex)
+            {
+                return NotFound(new { status = 404, message = ex.Message });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { status = 500, message = "An unexpected error occurred.", details = ex.Message });
+            }
         }
     }
 }

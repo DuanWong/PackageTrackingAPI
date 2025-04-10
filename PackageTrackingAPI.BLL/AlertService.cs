@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Threading.Tasks;
 using AutoMapper;
 using PackageTrackingAPI.DAL;
@@ -24,24 +25,37 @@ namespace PackageTrackingAPI.BLL
             return _mapper.Map<List<AlertDto>>(alerts);
         }
 
-        public async Task<List<AlertDto>> GetAlertsByUserIdAsync(int userId)
+        public async Task<AlertDto> GetAlertByIdAsync(int id)
         {
-            var alerts = await _alertRepository.GetAlertsByUserIdAsync(userId);
-            return _mapper.Map<List<AlertDto>>(alerts);
+            var alert = await _alertRepository.GetAlertByIdAsync(id);
+            if (alert == null)
+            {
+                throw new KeyNotFoundException($"Alert with ID {id} not found.");
+            }
+
+            return _mapper.Map<AlertDto>(alert);
         }
 
         public async Task<AlertDto> CreateAlertAsync(AlertDto alertDto)
         {
+            if (alertDto.UserID <= 0 || alertDto.PackageID <= 0)
+            {
+                throw new ArgumentException("UserID and PackageID must be valid.");
+            }
+
             var alert = _mapper.Map<Alert>(alertDto);
-            alert.Timestamp = DateTime.UtcNow;
-
-            await _alertRepository.AddAlertAsync(alert);
-
+            await _alertRepository.CreateAlertAsync(alert);
             return _mapper.Map<AlertDto>(alert);
         }
 
         public async Task DeleteAlertAsync(int id)
         {
+            var existingAlert = await _alertRepository.GetAlertByIdAsync(id);
+            if (existingAlert == null)
+            {
+                throw new KeyNotFoundException($"Alert with ID {id} not found.");
+            }
+
             await _alertRepository.DeleteAlertAsync(id);
         }
     }

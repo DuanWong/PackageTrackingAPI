@@ -1,6 +1,4 @@
-﻿using System.Collections.Generic;
-using System.Threading.Tasks;
-using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.EntityFrameworkCore;
 using PackageTrackingAPI.Models;
 
 namespace PackageTrackingAPI.DAL
@@ -19,42 +17,36 @@ namespace PackageTrackingAPI.DAL
             return await _context.Users.ToListAsync();
         }
 
-        public async Task<User> GetUserByIdAsync(int id)
+        public async Task<User?> GetUserByIdAsync(int id)
         {
             return await _context.Users.FindAsync(id);
         }
 
-        public async Task<User> CreateUserAsync(User user)
+        public async Task<bool> EmailExistsAsync(string email)
         {
-            if (user == null)
-                throw new ArgumentNullException(nameof(user));
-
-            await _context.Users.AddAsync(user);
-            await _context.SaveChangesAsync();
-            return user;
+            return await _context.Users.AnyAsync(u => u.Email == email);
         }
 
-        public async Task<User> UpdateUserAsync(User user)
+        public async Task CreateUserAsync(User user)
         {
-            if (user == null)
-                throw new ArgumentNullException(nameof(user));
+            _context.Users.Add(user);
+            await _context.SaveChangesAsync();
+        }
 
+        public async Task UpdateUserAsync(User user)
+        {
             _context.Users.Update(user);
             await _context.SaveChangesAsync();
-            return user;
         }
 
-        public async Task<bool> DeleteUserAsync(int id)
+        public async Task DeleteUserAsync(int id)
         {
             var user = await _context.Users.FindAsync(id);
-            if (user == null)
+            if (user != null)
             {
-                return false;
+                _context.Users.Remove(user);
+                await _context.SaveChangesAsync();
             }
-
-            _context.Users.Remove(user);
-            await _context.SaveChangesAsync();
-            return true;
         }
     }
 }

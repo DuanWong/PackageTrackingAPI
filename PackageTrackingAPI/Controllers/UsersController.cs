@@ -17,38 +17,104 @@ namespace PackageTrackingAPI.Controllers
         }
 
         [HttpGet]
-        public async Task<ActionResult<List<UserDto>>> GetAllUsers()
+        public async Task<IActionResult> GetAllUsers()
         {
-            var users = await _userService.GetAllUsersAsync();
-            return Ok(users);
+            try
+            {
+                var users = await _userService.GetAllUsersAsync();
+                return Ok(users);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { status = 500, message = "An unexpected error occurred.", details = ex.Message });
+            }
         }
 
         [HttpGet("{id}")]
-        public async Task<ActionResult<UserDto>> GetUserById(int id)
+        public async Task<IActionResult> GetUser(int id)
         {
-            var user = await _userService.GetUserByIdAsync(id);
-            return Ok(user);
+            try
+            {
+                var user = await _userService.GetUserByIdAsync(id);
+                return Ok(user);
+            }
+            catch (KeyNotFoundException ex)
+            {
+                return NotFound(new { status = 404, message = ex.Message });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { status = 500, message = "An unexpected error occurred.", details = ex.Message });
+            }
         }
 
         [HttpPost]
-        public async Task<ActionResult<UserDto>> CreateUser(UserDto userDto)
+        public async Task<IActionResult> CreateUser([FromBody] UserDto userDto)
         {
-            var createdUser = await _userService.CreateUserAsync(userDto);
-            return CreatedAtAction(nameof(GetUserById), new { id = createdUser.UserID }, createdUser);
+            if (!ModelState.IsValid)
+            {
+                return BadRequest(new { status = 400, message = "Validation failed.", errors = ModelState.Values.SelectMany(v => v.Errors.Select(e => e.ErrorMessage)) });
+            }
+
+            try
+            {
+                var user = await _userService.CreateUserAsync(userDto);
+                return CreatedAtAction(nameof(GetUser), new { id = user.UserID }, user);
+            }
+            catch (ArgumentException ex)
+            {
+                return BadRequest(new { status = 400, message = ex.Message });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { status = 500, message = "An unexpected error occurred.", details = ex.Message });
+            }
         }
 
         [HttpPut("{id}")]
-        public async Task<ActionResult<UserDto>> UpdateUser(int id, UserDto userDto)
+        public async Task<IActionResult> UpdateUser(int id, [FromBody] UserDto userDto)
         {
-            var updatedUser = await _userService.UpdateUserAsync(id, userDto);
-            return Ok(updatedUser);
+            if (!ModelState.IsValid)
+            {
+                return BadRequest(new { status = 400, message = "Validation failed.", errors = ModelState.Values.SelectMany(v => v.Errors.Select(e => e.ErrorMessage)) });
+            }
+
+            try
+            {
+                var updatedUser = await _userService.UpdateUserAsync(id, userDto);
+                return Ok(updatedUser);
+            }
+            catch (KeyNotFoundException ex)
+            {
+                return NotFound(new { status = 404, message = ex.Message });
+            }
+            catch (ArgumentException ex)
+            {
+                return BadRequest(new { status = 400, message = ex.Message });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { status = 500, message = "An unexpected error occurred.", details = ex.Message });
+            }
         }
 
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeleteUser(int id)
         {
-            await _userService.DeleteUserAsync(id);
-            return NoContent();
+            try
+            {
+                await _userService.DeleteUserAsync(id);
+                return NoContent();
+            }
+            catch (KeyNotFoundException ex)
+            {
+                return NotFound(new { status = 404, message = ex.Message });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { status = 500, message = "An unexpected error occurred.", details = ex.Message });
+            }
         }
     }
+
 }
