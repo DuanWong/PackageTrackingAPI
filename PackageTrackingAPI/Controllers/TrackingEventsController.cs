@@ -12,11 +12,11 @@ using PackageTrackingAPI.DAL;
 namespace PackageTrackingAPI.Controllers
 {
     [ApiController]
-    [Route("api/[controller]")]
+    [Route("api/[controller]")]  // Base route: /api/trackingevents
     public class TrackingEventsController : ControllerBase
     {
-        private readonly PackageTrackingContext _context;
-        private readonly IMapper _mapper;
+        private readonly PackageTrackingContext _context;  // DB access
+        private readonly IMapper _mapper;  // Object mapping
 
         public TrackingEventsController(PackageTrackingContext context, IMapper mapper)
         {
@@ -24,80 +24,47 @@ namespace PackageTrackingAPI.Controllers
             _mapper = mapper;
         }
 
-        [HttpPost]
+        [HttpPost]  // Create new tracking event
         public async Task<ActionResult<TrackingEventDto>> CreateTrackingEvent([FromBody] TrackingEventDto dto)
         {
-            if (!ModelState.IsValid)
-            {
-                return BadRequest(new
-                {
-                    Status = 400,
-                    Errors = ModelState.Values
-                        .SelectMany(v => v.Errors)
-                        .Select(e => e.ErrorMessage)
-                });
-            }
+            if (!ModelState.IsValid) return BadRequest();  // Validate input
 
-            // Verify package exists
-            var packageExists = await _context.Packages.AnyAsync(p => p.PackageID == dto.PackageID);
-            if (!packageExists)
-            {
-                return NotFound(new
-                {
-                    Status = 404,
-                    Message = $"Package with ID {dto.PackageID} not found"
-                });
-            }
+            if (!await _context.Packages.AnyAsync(p => p.PackageID == dto.PackageID))
+                return NotFound();  // Verify package exists
 
             var trackingEvent = _mapper.Map<TrackingEvent>(dto);
-            trackingEvent.Timestamp = DateTime.UtcNow;
+            trackingEvent.Timestamp = DateTime.UtcNow;  // Set current time
 
             _context.TrackingEvents.Add(trackingEvent);
             await _context.SaveChangesAsync();
 
-            // Partner's alert service would trigger here
-            return CreatedAtAction(
+            return CreatedAtAction(  // 201 response with location header
                 nameof(GetTrackingEvent),
                 new { id = trackingEvent.EventID },
                 _mapper.Map<TrackingEventDto>(trackingEvent));
         }
 
-        [HttpGet]
+        [HttpGet]  // Get filtered events
         public async Task<ActionResult<IEnumerable<TrackingEventDto>>> GetTrackingEvents(
-            [FromQuery] int? packageId = null,
-            [FromQuery] string status = null)
+            [FromQuery] int? packageId = null,  // Optional package filter
+            [FromQuery] string status = null)   // Optional status filter
         {
             var query = _context.TrackingEvents.AsQueryable();
 
-            if (packageId.HasValue)
-                query = query.Where(e => e.PackageID == packageId);
+            if (packageId.HasValue) query = query.Where(e => e.PackageID == packageId);
+            if (!string.IsNullOrEmpty(status)) query = query.Where(e => e.Status == status);
 
-            if (!string.IsNullOrEmpty(status))
-                query = query.Where(e => e.Status == status);
-
-            var events = await query.ToListAsync();
-            return _mapper.Map<List<TrackingEventDto>>(events);
+            return _mapper.Map<List<TrackingEventDto>>(await query.ToListAsync());
         }
 
-        [HttpGet("{id}")]
+        [HttpGet("{id}")]  // Get single event by ID
         public async Task<ActionResult<TrackingEventDto>> GetTrackingEvent(int id)
         {
-            var trackingEvent = await _context.TrackingEvents
-                .FirstOrDefaultAsync(e => e.EventID == id);
-
-            if (trackingEvent == null)
-            {
-                return NotFound(new
-                {
-                    Status = 404,
-                    Message = $"Tracking event with ID {id} not found"
-                });
-            }
-
-            return _mapper.Map<TrackingEventDto>(trackingEvent);
+            var trackingEvent = await _context.TrackingEvents.FindAsync(id);
+            return trackingEvent == null ? NotFound() : _mapper.Map<TrackingEventDto>(trackingEvent);
         }
 
-        [HttpGet("package/{packageId}/latest")]
+        [HttpGet("package/{packageId}/latest")]  // Get most recent event for package
         public async Task<ActionResult<TrackingEventDto>> GetLatestEvent(int packageId)
         {
             var latestEvent = await _context.TrackingEvents
@@ -105,63 +72,33 @@ namespace PackageTrackingAPI.Controllers
                 .OrderByDescending(e => e.Timestamp)
                 .FirstOrDefaultAsync();
 
-            if (latestEvent == null)
-            {
-                return NotFound(new
-                {
-                    Status = 404,
-                    Message = $"No events found for package {packageId}"
-                });
-            }
-
-            return _mapper.Map<TrackingEventDto>(latestEvent);
+            return latestEvent == null ? NotFound() : _mapper.Map<TrackingEventDto>(latestEvent);
         }
 
-        [HttpPut("{id}")]
+        [HttpPut("{id}")]  // Full update
         public async Task<IActionResult> UpdateTrackingEvent(int id, [FromBody] TrackingEventDto dto)
         {
-            if (id != dto.EventID)
-            {
-                return BadRequest(new
-                {
-                    Status = 400,
-                    Message = "ID mismatch between URL and body"
-                });
-            }
+            if (id != dto.EventID) return BadRequest();  // ID mismatch check
 
             var trackingEvent = await _context.TrackingEvents.FindAsync(id);
-            if (trackingEvent == null)
-            {
-                return NotFound(new
-                {
-                    Status = 404,
-                    Message = $"Tracking event with ID {id} not found"
-                });
-            }
+            if (trackingEvent == null) return NotFound();
 
-            _mapper.Map(dto, trackingEvent);
+            _mapper.Map(dto, trackingEvent);  // Apply updates
             await _context.SaveChangesAsync();
 
-            return NoContent();
+            return NoContent();  // 204 success
         }
 
-        [HttpDelete("{id}")]
+        [HttpDelete("{id}")]  // Delete event
         public async Task<IActionResult> DeleteTrackingEvent(int id)
         {
             var trackingEvent = await _context.TrackingEvents.FindAsync(id);
-            if (trackingEvent == null)
-            {
-                return NotFound(new
-                {
-                    Status = 404,
-                    Message = $"Tracking event with ID {id} not found"
-                });
-            }
+            if (trackingEvent == null) return NotFound();
 
             _context.TrackingEvents.Remove(trackingEvent);
             await _context.SaveChangesAsync();
 
-            return NoContent();
+            return NoContent();  // 204 success
         }
     }
 }

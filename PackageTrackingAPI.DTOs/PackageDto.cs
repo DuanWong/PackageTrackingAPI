@@ -1,18 +1,19 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using PackageTrackingAPI.DTOs;
+using System.ComponentModel.DataAnnotations;
 
-namespace PackageTrackingAPI.DTOs
+public class PackageDto
 {
-    public class PackageDto
-    {
-        public int PackageID { get; set; }
-        public string TrackingNumber { get; set; }
-        public int SenderID { get; set; }
-        public string ReceiverName { get; set; }
-        public string ReceiverAddress { get; set; }
-        public string CurrentStatus { get; set; }
-    }
+    public int PackageID { get; set; }
+
+    [Required, StringLength(50, MinimumLength = 5)]
+    public string TrackingNumber { get; set; }
+
+    [Required, Range(1, int.MaxValue)]
+    public int SenderID { get; set; }
+
+    [Required, StringLength(100)]
+    public string ReceiverName { get; set; }
+
+    public string CurrentStatus { get; set; } = "Created";
+    public List<TrackingEventDto> TrackingEvents { get; set; } = new();
 }

@@ -18,11 +18,15 @@ builder.Services.AddAutoMapper(typeof(AutoMapperProfile));
 
 // Register Services
 builder.Services.AddScoped<UserService>();
+builder.Services.AddScoped<PackageService>();
+builder.Services.AddScoped<TrackingEventService>();
 
 // Register Repositories
 builder.Services.AddScoped<UserRepository>();
+builder.Services.AddScoped<PackageRepository>();
+builder.Services.AddScoped<TrackingEventRepository>();
 
-// Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
+// Swagger configuration
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
@@ -36,7 +40,5 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseAuthorization();
-
 app.MapControllers();
-
 app.Run();
