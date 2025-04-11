@@ -1,17 +1,14 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using System.ComponentModel.DataAnnotations;
 
-namespace PackageTrackingAPI.DTOs
+public class TrackingEventDto
 {
-    public class TrackingEventDto
-    {
-        public int EventID { get; set; }
-        public int PackageID { get; set; }
-        public string Status { get; set; }
-        public string Location { get; set; }
-        public string Timestamp { get; set; }
-    }
+    public int EventID { get; set; }
+
+    [Required, Range(1, int.MaxValue)]
+    public int PackageID { get; set; }
+
+    [Required, StringLength(20)]
+    public string Status { get; set; }
+
+    public DateTime Timestamp { get; set; } = DateTime.UtcNow;
 }

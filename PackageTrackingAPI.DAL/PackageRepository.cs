@@ -5,41 +5,39 @@ namespace PackageTrackingAPI.DAL
 {
     public class PackageRepository
     {
-        private readonly PackageTrackingContext _context;
+        private readonly PackageTrackingContext _context;  // DB context
 
-        public PackageRepository(PackageTrackingContext context)
-        {
-            _context = context;
-        }
+        public PackageRepository(PackageTrackingContext context) => _context = context;
 
+        // Get package with related events and sender
         public async Task<Package> GetByIdAsync(int id)
-        {
-            return await _context.Packages
+            => await _context.Packages
                 .Include(p => p.TrackingEvents)
                 .Include(p => p.Sender)
                 .FirstOrDefaultAsync(p => p.PackageID == id);
-        }
 
+        // Get package by tracking number with relations
         public async Task<Package> GetByTrackingNumberAsync(string trackingNumber)
-        {
-            return await _context.Packages
+            => await _context.Packages
                 .Include(p => p.TrackingEvents)
                 .Include(p => p.Sender)
                 .FirstOrDefaultAsync(p => p.TrackingNumber == trackingNumber);
-        }
 
+        // Add new package
         public async Task AddAsync(Package package)
         {
             await _context.Packages.AddAsync(package);
             await _context.SaveChangesAsync();
         }
 
+        // Update existing package
         public async Task UpdateAsync(Package package)
         {
-            _context.Packages.Update(package);
+            _context.Entry(package).State = EntityState.Modified;
             await _context.SaveChangesAsync();
         }
 
+        // Delete package by ID (if exists)
         public async Task DeleteAsync(int id)
         {
             var package = await GetByIdAsync(id);
@@ -50,9 +48,8 @@ namespace PackageTrackingAPI.DAL
             }
         }
 
+        // Check if package exists
         public async Task<bool> ExistsAsync(int id)
-        {
-            return await _context.Packages.AnyAsync(p => p.PackageID == id);
-        }
+            => await _context.Packages.AnyAsync(p => p.PackageID == id);
     }
 }
