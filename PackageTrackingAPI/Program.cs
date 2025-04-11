@@ -20,11 +20,13 @@ builder.Services.AddAutoMapper(typeof(AutoMapperProfile));
 builder.Services.AddScoped<UserService>();
 builder.Services.AddScoped<PackageService>();
 builder.Services.AddScoped<TrackingEventService>();
+builder.Services.AddScoped<AlertService>();
 
 // Register Repositories
 builder.Services.AddScoped<UserRepository>();
 builder.Services.AddScoped<PackageRepository>();
 builder.Services.AddScoped<TrackingEventRepository>();
+builder.Services.AddScoped<AlertRepository>();
 
 // Swagger configuration
 builder.Services.AddEndpointsApiExplorer();
