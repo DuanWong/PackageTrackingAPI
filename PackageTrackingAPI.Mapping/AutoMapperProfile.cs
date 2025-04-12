@@ -15,6 +15,8 @@ namespace PackageTrackingAPI.Mapping
         {
             CreateMap<User, UserDto>().ReverseMap();
 
+            CreateMap<User, UserCreateDto>().ReverseMap();
+
             CreateMap<Package, PackageDto>().ReverseMap();
 
             CreateMap<TrackingEvent, TrackingEventDto>().ReverseMap();

@@ -49,7 +49,7 @@ namespace PackageTrackingAPI.Controllers
         }
 
         [HttpPost]
-        public async Task<IActionResult> CreateUser([FromBody] UserDto userDto)
+        public async Task<IActionResult> CreateUser([FromBody] UserCreateDto userCreateDto)
         {
             if (!ModelState.IsValid)
             {
@@ -58,7 +58,7 @@ namespace PackageTrackingAPI.Controllers
 
             try
             {
-                var user = await _userService.CreateUserAsync(userDto);
+                var user = await _userService.CreateUserAsync(userCreateDto);
                 return CreatedAtAction(nameof(GetUser), new { id = user.UserID }, user);
             }
             catch (ArgumentException ex)
