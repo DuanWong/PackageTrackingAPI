@@ -30,16 +30,16 @@ public class UserService
         return _mapper.Map<UserDto>(user);
     }
 
-    public async Task<UserDto> CreateUserAsync(UserDto userDto)
+    public async Task<UserCreateDto> CreateUserAsync(UserCreateDto userCreateDto)
     {
-        if (await _userRepository.EmailExistsAsync(userDto.Email))
+        if (await _userRepository.EmailExistsAsync(userCreateDto.Email))
         {
             throw new ArgumentException("A user with this email already exists.");
         }
 
-        var user = _mapper.Map<User>(userDto);
+        var user = _mapper.Map<User>(userCreateDto);
         await _userRepository.CreateUserAsync(user);
-        return _mapper.Map<UserDto>(user);
+        return _mapper.Map<UserCreateDto>(user);
     }
 
     public async Task<UserDto> UpdateUserAsync(int id, UserDto userDto)

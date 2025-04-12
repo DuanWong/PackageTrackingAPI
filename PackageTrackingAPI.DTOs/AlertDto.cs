@@ -22,6 +22,6 @@ namespace PackageTrackingAPI.DTOs
         public string Message { get; set; }
 
         [Required(ErrorMessage = "Timestamp is required.")]
-        public string Timestamp { get; set; }
+        public DateTime Timestamp { get; set; }
     }
 }
