@@ -12,8 +12,8 @@ using PackageTrackingAPI.DAL;
 namespace PackageTrackingAPI.DAL.Migrations
 {
     [DbContext(typeof(PackageTrackingContext))]
-    [Migration("20250411224444_SeedData")]
-    partial class SeedData
+    [Migration("20250412025941_InitialCreate")]
+    partial class InitialCreate
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -60,6 +60,58 @@ namespace PackageTrackingAPI.DAL.Migrations
                     b.HasIndex("SenderID");
 
                     b.ToTable("Packages");
+
+                    b.HasData(
+                        new
+                        {
+                            PackageID = 101,
+                            CreatedAt = new DateTime(2025, 4, 12, 2, 59, 41, 0, DateTimeKind.Utc).AddTicks(7620),
+                            CurrentStatus = "Created",
+                            ReceiverAddress = "123 Main St, City, Country",
+                            ReceiverName = "John Doe",
+                            SenderID = 1,
+                            TrackingNumber = "TRACK1234"
+                        },
+                        new
+                        {
+                            PackageID = 102,
+                            CreatedAt = new DateTime(2025, 4, 12, 2, 59, 41, 0, DateTimeKind.Utc).AddTicks(7626),
+                            CurrentStatus = "Shipped",
+                            ReceiverAddress = "456 Oak St, City, Country",
+                            ReceiverName = "Jane Smith",
+                            SenderID = 2,
+                            TrackingNumber = "TRACK5678"
+                        },
+                        new
+                        {
+                            PackageID = 103,
+                            CreatedAt = new DateTime(2025, 4, 12, 2, 59, 41, 0, DateTimeKind.Utc).AddTicks(7628),
+                            CurrentStatus = "Delivered",
+                            ReceiverAddress = "789 Pine St, City, Country",
+                            ReceiverName = "Alice Johnson",
+                            SenderID = 3,
+                            TrackingNumber = "TRACK9101"
+                        },
+                        new
+                        {
+                            PackageID = 104,
+                            CreatedAt = new DateTime(2025, 4, 12, 2, 59, 41, 0, DateTimeKind.Utc).AddTicks(7630),
+                            CurrentStatus = "In Transit",
+                            ReceiverAddress = "101 Maple St, City, Country",
+                            ReceiverName = "Bob Williams",
+                            SenderID = 4,
+                            TrackingNumber = "TRACK1121"
+                        },
+                        new
+                        {
+                            PackageID = 105,
+                            CreatedAt = new DateTime(2025, 4, 12, 2, 59, 41, 0, DateTimeKind.Utc).AddTicks(7632),
+                            CurrentStatus = "Returned",
+                            ReceiverAddress = "202 Birch St, City, Country",
+                            ReceiverName = "Charlie Brown",
+                            SenderID = 5,
+                            TrackingNumber = "TRACK3141"
+                        });
                 });
 
             modelBuilder.Entity("PackageTrackingAPI.Models.Alert", b =>
@@ -230,6 +282,48 @@ namespace PackageTrackingAPI.DAL.Migrations
                     b.HasIndex("PackageID");
 
                     b.ToTable("TrackingEvents");
+
+                    b.HasData(
+                        new
+                        {
+                            EventID = 1,
+                            Location = "Warehouse A",
+                            PackageID = 101,
+                            Status = "Package created",
+                            Timestamp = new DateTime(2025, 4, 12, 2, 59, 41, 0, DateTimeKind.Utc).AddTicks(7662)
+                        },
+                        new
+                        {
+                            EventID = 2,
+                            Location = "Warehouse B",
+                            PackageID = 102,
+                            Status = "Package shipped",
+                            Timestamp = new DateTime(2025, 4, 12, 2, 59, 41, 0, DateTimeKind.Utc).AddTicks(7665)
+                        },
+                        new
+                        {
+                            EventID = 3,
+                            Location = "Delivery Point",
+                            PackageID = 103,
+                            Status = "Package delivered",
+                            Timestamp = new DateTime(2025, 4, 12, 2, 59, 41, 0, DateTimeKind.Utc).AddTicks(7667)
+                        },
+                        new
+                        {
+                            EventID = 4,
+                            Location = "Distribution Center",
+                            PackageID = 104,
+                            Status = "Package in transit",
+                            Timestamp = new DateTime(2025, 4, 12, 2, 59, 41, 0, DateTimeKind.Utc).AddTicks(7669)
+                        },
+                        new
+                        {
+                            EventID = 5,
+                            Location = "Returned to sender",
+                            PackageID = 105,
+                            Status = "Package returned",
+                            Timestamp = new DateTime(2025, 4, 12, 2, 59, 41, 0, DateTimeKind.Utc).AddTicks(7670)
+                        });
                 });
 
             modelBuilder.Entity("Package", b =>
